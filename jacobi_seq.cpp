@@ -1,6 +1,5 @@
 #include <cstdio>
 #include <math.h>
-#include <vector>
 #include <string>
 #include <cstring>
 #include <sys/time.h>
@@ -27,7 +26,7 @@ void mat_multiply(const int n_row, const int n_col, const double* A, const doubl
 }
 
 
-void jacobi_seq(const int grid_size, const double* A, double* b, double* x, int max_iter=10000, double l2_termination=1e-6){
+void seq_jacobi(const int grid_size, const double* A, double* b, double* x, int max_iter=10000, double l2_termination=1e-6){
 
     const int n = grid_size*grid_size;
     double *D = new double[n];
@@ -135,31 +134,28 @@ void show_vec(double* x, const int grid_size){
     printf("\n");
 }
 
-void show_vec(double* x, const int grid_size){
-    for(int i = 0 ; i < grid_size*grid_size; ++i){
-        printf("%.3f ", x[i]);
-    }
-    printf("\n");
-}
 
 int main(int argc, char* argv[])
 {
-    
+    // g++ jacobi_seq.cpp -o jacobi_seq && ./jacobi_seq 4   
     const int grid_size = atoi(argv[1]);
-
-    double b[grid_size*grid_size];
-    gen_b(grid_size, b);
-    printf("\n");
     const int n_rows = grid_size*grid_size;
     const int n_cols = grid_size*grid_size;
 
     double* A = new double[n_rows*n_cols]{0};
     gen_matrix(grid_size, A);
 
-    double* x = new double[grid_size*grid_size];
-    jacobi_seq(grid_size, A, b, x);
-    printf("\n");
-    show_vec(x, grid_size);
+    double* b = new double[n_cols];
+    gen_b(grid_size, b);
+
+    double* x = new double[n_rows];
+
+    uint64_t start = GetTimeStamp();
+    seq_jacobi(grid_size, A, b, x);
+	printf("Time: %ld us\n", (uint64_t) (GetTimeStamp() - start));
+
+    // printf("\n");
+    // show_vec(x, grid_size);
 
 
 

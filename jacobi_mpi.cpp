@@ -1,11 +1,18 @@
-#include <math.h>
 #include <mpi.h>
-#include <assert.h>
+#include <cstdio>
+#include <math.h>
+#include <string>
+#include <cstring>
+#include <sys/time.h>
+
+uint64_t GetTimeStamp() {
+    struct timeval tv;
+    gettimeofday(&tv,NULL);
+    return tv.tv_sec*(uint64_t)1000000+tv.tv_usec;
+}
 
 // The following code comes from https://github.com/ajdsouza/Parallel-MPI-Jacobi.git
 // use MPI to solve the linear equation Ax = b
-
-
 void get_grid_comm(MPI_Comm* grid_comm)
 {
     // get comm size and rank
@@ -134,16 +141,12 @@ void distribute_vector(const int n, double* input_vector, double** local_vector,
 			}
 		}
 
-
-
       	// scatterv
 		MPI_Scatterv(
 			input_vector, ncount, disp, MPI_DOUBLE,
 			tmp_vec,rcv_size, MPI_DOUBLE,
 			rank_col_root, comm_col
 		);
-
-
 
 		// print the rcv buffer
 		//double *ptr = *local_vector;
@@ -156,9 +159,6 @@ void distribute_vector(const int n, double* input_vector, double** local_vector,
 		free(disp);
 
     }
-
-
-
 
 	// test
 	//double *rr=nullptr;
@@ -826,11 +826,6 @@ void distributed_jacobi(const int n, double* local_A, double* local_b, double* l
 	while ( (iter < max_iter) && ( l2norm > l2_termination ) )
 	{
 
-
-
-
-
-
 		// y = Ax
 		///distributed_matrix_vector_mult(n,local_A,local_x,local_y,comm);
 
@@ -911,9 +906,10 @@ void mpi_matrix_vector_mult(const int n, double* A, double* x, double* y, MPI_Co
 
 
 // wraps the distributed jacobi function
-void mpi_jacobi(const int n, double* A, double* b, double* x, MPI_Comm comm,
-                int max_iter, double l2_termination)
+void mpi_jacobi(const int grid_size, double* A, double* b, double* x, MPI_Comm comm,
+                int max_iter=1000, double l2_termination=1e-10)
 {
+	const int n = grid_size*grid_size;
 	// distribute the array onto local processors!
 	double* local_A = nullptr;
 	double* local_b = nullptr;
@@ -980,7 +976,7 @@ void gen_matrix(const int grid_size, double* A, bool display=false){
 	}
 }
 
-void gen_b(const int grid_size, double* b){
+void gen_b(const int grid_size, double* b, bool display=false){
 	const int size = grid_size*grid_size;
     for(int idx = 0; idx < size; ++idx){
         b[idx] = 0;
@@ -998,47 +994,63 @@ void gen_b(const int grid_size, double* b){
         else if (row == grid_size)
             b[idx] += 0.0;
     }
+
+	if(display){
+		for(int i = 0 ; i < size; ++i){
+			printf("%.2f ", b[i]);
+		}
+	}
+	
 }
 
 
-int main(int argc, char** argv){
-
-	const int grid_size = 4;	// generate 4 x 4 grid
-
-//	double* A = new double[grid_size*grid_size*grid_size*grid_size];
-//	gen_matrix(grid_size, A);
-	
-
-	// mpicxx -o jacobi_mpi jacobi_mpi.cpp
-	// mpirun -np 4 --oversubscribe jacobi_mpi in single core computer
-    int n = 4;
-
-    double A[4*4] = {
-                         10., -1., 2., 0.,
-                         -1., 11., -1., 3.,
-                         2., -1., 10., -1.,
-                         0.0, 3., -1., 8.
-                     };
-
-    double x[4] =  {6., 25., -11., 15.};
-    double y[4];
-    double expected_y[4] = {13.,  325., -138.,  206.};
-
-
-
-	MPI_Init(&argc, &argv);
-
-    MPI_Comm grid_comm;
-    get_grid_comm(&grid_comm);
-
-    mpi_matrix_vector_mult(n, A, x, y, grid_comm);
-
-    MPI_Finalize();
-    for(int i = 0 ; i < n; ++i){
-        printf("%.2f ", y[i]);
+void show_vec(double* x, const int grid_size){
+    for(int i = 0 ; i < grid_size*grid_size; ++i){
+        printf("%.3f ", x[i]);
     }
     printf("\n");
+}
+
+
+int main(int argc, char** argv)
+{
+	
+	// mpicxx jacobi_mpi.cpp -o jacobi_mpi && mpirun -np 4 jacobi_mpi 4
+	const int grid_size = atoi(argv[1]);
+	const int n_rows = grid_size*grid_size;
+    const int n_cols = grid_size*grid_size;
+
+    double* A = new double[n_rows*n_cols]{0};
+	gen_matrix(grid_size, A);
+	
+	double* b = new double[n_cols];
+	gen_b(grid_size, b);
+
+	double* x = new double[n_rows];
+	
+
+	uint64_t start = GetTimeStamp();
+	MPI_Init(&argc, &argv);
+    MPI_Comm grid_comm;
+    get_grid_comm(&grid_comm);
+	mpi_jacobi(grid_size, A, b, x, grid_comm);
+    MPI_Finalize();
+	printf("Time: %ld us\n", (uint64_t) (GetTimeStamp() - start));
+
+    // show_vec(x, grid_size);
+    // printf("\n");
 
 
     return 0;
 }
+
+// double A[4*4] = {
+//                      10., -1., 2., 0.,
+//                      -1., 11., -1., 3.,
+//                      2., -1., 10., -1.,
+//                      0.0, 3., -1., 8.
+//                  };
+
+// double x[4] =  {6., 25., -11., 15.};
+// double y[4];
+// double expected_y[4] = {13.,  325., -138.,  206.};
