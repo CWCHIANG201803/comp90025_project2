@@ -68,7 +68,7 @@ int block_decompose_by_dim(const int n, MPI_Comm comm, int dim)
 void distribute_vector(const int n, double* input_vector, double** local_vector, MPI_Comm comm)
 {
 	// TODO
-    //std::cout<<"DEBUG:mpi_jacobi::distribute_vector:begin with n="<<n<<std::endl;
+
 
     // rank in grid
     int cur_rank;
@@ -82,41 +82,32 @@ void distribute_vector(const int n, double* input_vector, double** local_vector,
     int coords_root[2]={0,0};
     MPI_Cart_rank(comm, coords_root, &rank_root);
 
-    // recieved input to distribute
-    //if ( cur_rank == rank_root ) {
-    //for (int i=0;i<n;i++){
-        //std::cout<<"DEBUG:mpi_jacobi::distribute_vector:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),recieved input_vector["<<i<<"]="<<input_vector[i]<<std::endl;
-    //}
-    //}
 
     // create a comm group for each column
     MPI_Comm comm_col;
     int cdims[] = {1,0};
     MPI_Cart_sub(comm, cdims, &comm_col);
 
-    //std::cout<<"DEBUG:mpi_jacobi::distribute_vector:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),created cart sub for rank="<<cur_rank<<std::endl;
-
     // distribute vector among first column processors only 
     if ( cur_coords[1]==0 ){
-		//std::cout<<"DEBUG:mpi_jacobi::distribute_vector:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),rank="<<cur_rank<<std::endl;
       	// rank in the column
 		int col_size;
 		int cur_col_rank;
 		MPI_Comm_size(comm_col, &col_size);
 		MPI_Comm_rank(comm_col, &cur_col_rank);
 
-      	//std::cout<<"DEBUG:mpi_jacobi::distribute_vector:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),n="<<n<<",colrank="<<cur_col_rank<<",col_size="<<col_size<<std::endl;
+
 
       	// floor and ceil values
 		int fnp = (int)floor(((double)n)/col_size);
 		int cnp = (int)ceil(((double)n)/col_size);
 
-      	//std::cout<<"DEBUG:mpi_jacobi::distribute_vector:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<",cnp="<<cnp<<",fnp="<<fnp<<std::endl;
+
 
       	// allocate memory for rcv buffer
 		int rcv_size = cur_col_rank < ( n % col_size ) ? cnp : fnp;
 
-      	//std::cout<<"DEBUG:mpi_jacobi::distribute_vector:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),Allocation memory for local vector="<<rcv_size<<std::endl;
+
 
       	double *tmp_vec;
 	  	tmp_vec=(double *)malloc(rcv_size*sizeof(double));
@@ -126,9 +117,9 @@ void distribute_vector(const int n, double* input_vector, double** local_vector,
 		int rank_col_root;
 		MPI_Cart_rank(comm_col,coords_root,&rank_col_root);
 
-      	//std::cout<<"DEBUG:mpi_jacobi::distribute_vector:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),the col rank of (0,,0) is "<<rank_col_root<<std::endl;
 
-      	//std::cout<<"DEBUG:mpi_jacobi::distribute_vector:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),Allocation memory for count and displ array for scatterv="<<col_size<<std::endl;
+
+
 
       	int *disp = (int *)malloc(col_size*sizeof(int));
       	int *ncount = (int *)malloc(col_size*sizeof(int));
@@ -139,11 +130,11 @@ void distribute_vector(const int n, double* input_vector, double** local_vector,
 			for (int i=0;i<col_size;i++) {
 				ncount[i] = i < ( n % col_size ) ? cnp : fnp;
 				disp[i] = i > 0 ? disp[i-1]+ncount[i-1] : 0;
-          		//std::cout<<"DEBUG:mpi_jacobi::distribute_vector:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"), allocated for col="<<i<<", disp="<<disp[i]<<",count="<<ncount[i]<<std::endl;
+
 			}
 		}
 
-      	//std::cout<<"DEBUG:mpi_jacobi::distribute_vector:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),colrank="<<cur_col_rank<<",scatterv, with rank_root="<<rank_col_root<<std::endl;
+
 
       	// scatterv
 		MPI_Scatterv(
@@ -152,13 +143,13 @@ void distribute_vector(const int n, double* input_vector, double** local_vector,
 			rank_col_root, comm_col
 		);
 
-		//std::cout<<"DEBUG:mpi_jacobi::distribute_vector:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),Completed scatterv, with rank_root="<<rank_col_root<<std::endl;
+
 
 		// print the rcv buffer
 		//double *ptr = *local_vector;
 
 		//for (int i=0;i<rcv_size;i++){
-			//std::cout<<"DEBUG:mpi_jacobi::distribute_vector:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),recieved from scatterv local_vector["<<i<<"]="<<ptr[i]<<std::endl;
+
 		//}
 
 		free(ncount);
@@ -167,7 +158,7 @@ void distribute_vector(const int n, double* input_vector, double** local_vector,
     }
 
 
-	//std::cout<<"DEBUG:mpi_jacobi::distribute_vector:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),completed"<<std::endl;
+
 
 	// test
 	//double *rr=nullptr;
@@ -184,7 +175,7 @@ void gather_vector(const int n, double* local_vector, double* output_vector, MPI
 {
 	// TODO
 
-	//std::cout<<"DEBUG:mpi_jacobi::gather_vector:begin with n="<<n<<std::endl;
+
 
 	// rank in grid
 	int cur_rank;
@@ -204,19 +195,19 @@ void gather_vector(const int n, double* local_vector, double* output_vector, MPI
 	int cdims[2] = {1,0};
 	MPI_Cart_sub(comm, cdims, &comm_col);
 
-  	//std::cout<<"DEBUG:mpi_jacobi::gather_vector:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),created cart sub for rank="<<cur_rank<<std::endl;
+
 
   	// gather vector among first column processors only 
 	if ( cur_coords[1]==0 ){
 
-		//std::cout<<"DEBUG:mpi_jacobi::gather_vector:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),rank="<<cur_rank<<std::endl;
+
 		// rank in the column
 		int col_size;
 		int cur_col_rank;
 		MPI_Comm_size(comm_col,&col_size);
 		MPI_Comm_rank(comm_col,&cur_col_rank);
 
-		//std::cout<<"DEBUG:mpi_jacobi::gather_vector:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),colrank="<<cur_col_rank<<",col_size="<<col_size<<std::endl;
+
 
 		// floor and ceil values
 		int fnp = (int)floor(((double)n)/col_size);
@@ -234,9 +225,9 @@ void gather_vector(const int n, double* local_vector, double* output_vector, MPI
 		int rank_col_root;
 		MPI_Cart_rank(comm_col,coords_root,&rank_col_root);
 
-		//std::cout<<"DEBUG:mpi_jacobi::gather_vector:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),the col rank of (0,,0) is "<<rank_col_root<<std::endl;
 
-		//std::cout<<"DEBUG:mpi_jacobi::gather_vector:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),Allocation memory for count and displ array for scatterv="<<col_size<<std::endl;
+
+
 
 		int *disp = (int *)malloc(col_size*sizeof(int));
 		int *ncount = (int *)malloc(col_size*sizeof(int));
@@ -245,18 +236,18 @@ void gather_vector(const int n, double* local_vector, double* output_vector, MPI
 		// prepare the count and disp arrays for scatterv
 		if ( cur_col_rank == rank_col_root ){
 
-			//std::cout<<"DEBUG:mpi_jacobi::gather_vector:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),Allocation memory for local vector n ="<<n<<std::endl;
+
 
 			// memory is already allocated on rank 00 processor
 			//output_vector=(double *)malloc(n*sizeof(double));
 			for (int i=0;i<col_size;i++) {
 				ncount[i] = i < ( n % col_size ) ? cnp : fnp;
 				disp[i] = (i > 0) ? disp[i-1]+ncount[i-1] : 0;
-				//std::cout<<"DEBUG:mpi_jacobi::gather_vector:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"), allocated for col="<<i<<", disp="<<disp[i]<<",count="<<ncount[i]<<std::endl;
+
 			}
 		}
 
-		//std::cout<<"DEBUG:mpi_jacobi::gather_vector:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),colrank="<<cur_col_rank<<",gatherv, with rank_root="<<rank_col_root<<std::endl;
+
 
 		// scatterv
 		MPI_Gatherv(
@@ -265,20 +256,20 @@ void gather_vector(const int n, double* local_vector, double* output_vector, MPI
 			rank_col_root, comm_col
 		);
 
-		//std::cout<<"DEBUG:mpi_jacobi::gather_vector:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),Completed gatherv, with rank_root="<<rank_col_root<<std::endl;
+
 
 		// print the rcv buffer
 		//double *ptr = local_vector;
 
 		//for (int i=0;i<sendsize;i++){
-			//std::cout<<"DEBUG:mpi_jacobi::gather_vector:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),sent through gather local_vector["<<i<<"]="<<ptr[i]<<std::endl;
+
 		//}
 
 		//ptr = output_vector;
 
 		//if ( cur_col_rank == rank_col_root ) {
 		//  for (int i=0;i<n;i++){
-		//std::cout<<"DEBUG:mpi_jacobi::gather_vector:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),recieved from gather output_vector["<<i<<"]="<<ptr[i]<<std::endl;
+
 		//}
 		//}
 
@@ -286,7 +277,7 @@ void gather_vector(const int n, double* local_vector, double* output_vector, MPI
 		free(disp);
 	}
 
-	//std::cout<<"DEBUG:mpi_jacobi::gather_vector:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),completed"<<std::endl;
+
 }
 
 
@@ -338,7 +329,7 @@ void distribute_matrix(const int n, double* input_matrix, double** local_matrix,
 
 
 
-	//std::cout<<"DEBUG:mpi_jacobi::distribute_matrix:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),created column cart sub for rank="<<cur_rank<<std::endl;
+
 
 	// rank in the column
 	int col_size;
@@ -357,11 +348,11 @@ void distribute_matrix(const int n, double* input_matrix, double** local_matrix,
 	// first distribute among first column processors only 
 	if ( cur_coords[1]==0 ){
 
-		//std::cout<<"DEBUG:mpi_jacobi::distribute_matrix:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),rank="<<cur_rank<<",colrank="<<cur_col_rank<<",col_size="<<col_size<<std::endl;
+
 
 		int rcv_size = block_rows*n;
 
-		//std::cout<<"DEBUG:mpi_jacobi::distribute_matrix:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),Allocation memory for row_block_matrix="<<rcv_size<<std::endl;
+
 
 		row_block_matrix=(double *)malloc(rcv_size*sizeof(double));
 
@@ -370,9 +361,9 @@ void distribute_matrix(const int n, double* input_matrix, double** local_matrix,
 		int colcoords_root = 0;
 		MPI_Cart_rank(comm_col,&colcoords_root,&rank_col_root);
 
-		//std::cout<<"DEBUG:mpi_jacobi::distribute_matrix:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),the col rank of (0,0) is "<<rank_col_root<<std::endl;
 
-		//std::cout<<"DEBUG:mpi_jacobi::distribute_matrix:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),Allocation memory for count and displ array for scatterv="<<col_size<<std::endl;
+
+
 
 		//disp = (int *)malloc(col_size*sizeof(int));
 		//ncount = (int *)malloc(col_size*sizeof(int));
@@ -388,13 +379,13 @@ void distribute_matrix(const int n, double* input_matrix, double** local_matrix,
 				ncount[i] = i < ( n % col_size ) ? n*cnp : n*fnp;
 				disp[i] = i > 0 ? disp[i-1]+ncount[i-1] : 0;
 
-				//std::cout<<"DEBUG:mpi_jacobi::distribute_matrix:n="<<n<<"(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"), allocated for col="<<i<<", disp="<<disp[i]<<",count="<<ncount[i]<<std::endl;
+
 
 			}
 
 		}
 
-		//std::cout<<"DEBUG:mpi_jacobi::distribute_matrix:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),colrank="<<cur_col_rank<<",scatterv, with rank_root="<<rank_col_root<<std::endl;
+
 
 		// scatterv
 		MPI_Scatterv(
@@ -403,14 +394,14 @@ void distribute_matrix(const int n, double* input_matrix, double** local_matrix,
 			rank_col_root, comm_col
 		);
 
-		//std::cout<<"DEBUG:mpi_jacobi::distribute_matrix:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),Completed scatterv, with rank_root="<<rank_col_root<<std::endl;
+
 
 		// print the rcv buffer
 		//double *ptr = row_block_matrix;
 
 		//if ( cur_coords[0]==1) {
 		//for (int i=0;i<rcv_size;i++){
-		//std::cout<<"DEBUG:mpi_jacobi::distribute_matrix::n="<<n<<"(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),recieved from scatterv row_block_matrix["<<i<<"]="<<ptr[i]<<std::endl;
+
 		//}
 		//}
 
@@ -420,7 +411,7 @@ void distribute_matrix(const int n, double* input_matrix, double** local_matrix,
 		}
 	}
 
-	//std::cout<<"DEBUG:mpi_jacobi::distribute_matrix:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),Completed distributing the rows in processor 0,0 to processors in first column "<<std::endl;
+
 
 
 
@@ -436,7 +427,7 @@ void distribute_matrix(const int n, double* input_matrix, double** local_matrix,
 	int rdims[2] = {0,1};
 	MPI_Cart_sub(comm, rdims, &comm_row);
 
-	//std::cout<<"DEBUG:mpi_jacobi::distribute_matrix:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),created row cart sub for rank="<<cur_rank<<std::endl;
+
 
 	// rank in the row
 	int row_size;
@@ -444,7 +435,7 @@ void distribute_matrix(const int n, double* input_matrix, double** local_matrix,
 	MPI_Comm_size(comm_row,&row_size);
 	MPI_Comm_rank(comm_row,&cur_row_rank);
 
-	//std::cout<<"DEBUG:mpi_jacobi::distribute_matrix:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),rowrank="<<cur_row_rank<<",row_size="<<row_size<<std::endl;
+
 
 	// floor and ceil values
 	fnp = (int)floor(((double)n)/row_size);
@@ -453,7 +444,7 @@ void distribute_matrix(const int n, double* input_matrix, double** local_matrix,
 	int rcv_size;
 	// allocate memory for rcv buffer
 	rcv_size = cur_row_rank < ( n % row_size ) ? cnp*block_rows : fnp*block_rows;
-	//std::cout<<"DEBUG:mpi_jacobi::distribute_matrix:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),allocating memory for local_matrix="<<rcv_size<<std::endl;
+
 
 
 	double *temp_matrix;
@@ -465,7 +456,7 @@ void distribute_matrix(const int n, double* input_matrix, double** local_matrix,
 	int row_coords_root = 0;
 	MPI_Cart_rank(comm_row, &row_coords_root, &rank_row_root);
 
-	//std::cout<<"DEBUG:mpi_jacobi::distribute_matrix:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),the row rank of ("<<row_coords_root<<",0) is "<<rank_row_root<<std::endl;
+
 
 
 	//disp = (int *)malloc(row_size*sizeof(int));
@@ -481,7 +472,7 @@ void distribute_matrix(const int n, double* input_matrix, double** local_matrix,
 	// prepare the count and disp arrays for scatterv
 	if ( cur_row_rank == rank_row_root ){
 
-		//std::cout<<"DEBUG:mpi_jacobi::distribute_matrix:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"), allocating for row disp/count arrays "<<std::endl;
+
 		disp = (int *)malloc(row_size*sizeof(int));
 		ncount = (int *)malloc(row_size*sizeof(int));
 
@@ -489,12 +480,12 @@ void distribute_matrix(const int n, double* input_matrix, double** local_matrix,
 			ncount[i] = i < ( n % row_size ) ? cnp : fnp;
 			disp[i] = (i>0) ? disp[i-1]+ncount[i-1] : 0;
 			
-			//std::cout<<"DEBUG:mpi_jacobi::distribute_matrix:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"), allocated for col="<<i<<", disp="<<disp[i]<<",count="<<ncount[i]<<std::endl;
+
 
 		}
 	}
 
-	//std::cout<<"DEBUG:mpi_jacobi::distribute_matrix:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),rowrank="<<cur_row_rank<<",scatterv, for row with rank_root="<<rank_row_root<<std::endl;
+
 
 	MPI_Barrier(comm_row);
 
@@ -502,7 +493,7 @@ void distribute_matrix(const int n, double* input_matrix, double** local_matrix,
 	MPI_Scatterv(row_block_matrix,ncount,disp, coltype, temp_matrix,rcv_size, MPI_DOUBLE, rank_row_root,comm_row);
 
 
-	//std::cout<<"DEBUG:mpi_jacobi::distribute_matrix:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),Completed scatterv, with rank_root="<<rank_row_root<<std::endl;
+
 
 	// print the rcv buffer
 	//double *ptr = *local_matrix;
@@ -510,7 +501,7 @@ void distribute_matrix(const int n, double* input_matrix, double** local_matrix,
 	//if ( ( cur_coords[0] == 1 ) && (cur_coords[1] == 1) ){
 
 	//for (int i=0;i<rcv_size;i++){
-	//std::cout<<"DEBUG:mpi_jacobi::distribute_matrix::n="<<n<<"(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),recieved from scatterv local_matrix["<<i<<"]="<<ptr[i]<<std::endl;
+
 	//}
 	//}
 
@@ -522,9 +513,9 @@ void distribute_matrix(const int n, double* input_matrix, double** local_matrix,
 		free(row_block_matrix);
 	}
 
-	//std::cout<<"DEBUG:mpi_jacobi::distribute_matrix:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),Completed distributing the columns from column 0 "<<std::endl;
 
-	//std::cout<<"DEBUG:mpi_jacobi::distribute_matrix:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),Completed distribute_matrix "<<std::endl;
+
+
 
 }
 
@@ -533,7 +524,7 @@ void distribute_matrix(const int n, double* input_matrix, double** local_matrix,
 void transpose_bcast_vector(const int n, double* col_vector, double* row_vector, MPI_Comm comm)
 {
 	// TODO
-	//std::cout<<"DEBUG:mpi_jacobi::transpose_bcast_vector:begin with n="<<n<<std::endl;
+
 
 	// rank in grid
 	int cur_rank;
@@ -551,7 +542,7 @@ void transpose_bcast_vector(const int n, double* col_vector, double* row_vector,
 	int ldims[2] = {1,0};
 	MPI_Cart_sub(comm,ldims,&comm_col);
 
-	//std::cout<<"DEBUG:mpi_jacobi::transpose_bcast_vector:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),created row cart sub for rank="<<cur_rank<<std::endl;
+
 
 	// rank in the row and col
 	int row_size;
@@ -582,7 +573,7 @@ void transpose_bcast_vector(const int n, double* col_vector, double* row_vector,
 	MPI_Cart_rank(comm_col, &coldiagproccords, &rankcoldiag);
 
 
-	//std::cout<<"DEBUG:mpi_jacobi::transpose_broadcast_vector:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),rowrank="<<cur_row_rank<<",row_size="<<row_size<<",colrank="<<cur_col_rank<<",col_size="<<col_size<<std::endl;
+
 
 	// get the column block size
 	int col_block_size;
@@ -600,7 +591,7 @@ void transpose_bcast_vector(const int n, double* col_vector, double* row_vector,
 			}
 		} else {
 			MPI_Send(col_vector,col_block_size, MPI_DOUBLE,rank_row_diag,0,comm_row);
-			//std::cout<<"DEBUG:mpi_jacobi::transpose_bcast_vector:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),sending local_vector to rank_row_diag="<<rank_row_diag<<std::endl;
+
 		}
 	}
 
@@ -609,7 +600,7 @@ void transpose_bcast_vector(const int n, double* col_vector, double* row_vector,
 	if ( (cur_coords[0] == cur_coords[1]) && (cur_coords[1] != 0 ) ) {
 
 		MPI_Recv(row_vector,col_block_size, MPI_DOUBLE,rank_row_root,0,comm_row,MPI_STATUS_IGNORE);
-		//std::cout<<"DEBUG:mpi_jacobi::transpose_bcast_vector:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),recieving local_vector from rank_row_root="<<rank_row_root<<std::endl;
+
 	}
 
 
@@ -621,13 +612,13 @@ void transpose_bcast_vector(const int n, double* col_vector, double* row_vector,
 	cnp = (int)ceil( ((double)n)/row_size);
 	int row_block_size = cur_row_rank < ( n % row_size ) ? cnp : fnp;
 
-	//std::cout<<"DEBUG:mpi_jacobi::transpose_bcast_vector:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),broadcasting the row_vector of size="<<row_block_size<<",to all processors in a column, from processor col rank="<<rankcoldiag<<std::endl;
+
 
 	// broadcast
 	MPI_Bcast(row_vector, row_block_size, MPI_DOUBLE, rankcoldiag, comm_col);
 
 
-	//std::cout<<"DEBUG:mpi_jacobi::transpose_bcast_vector:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),Completed transpose_bcast_vector "<<std::endl;
+
 
 }
 
@@ -636,7 +627,7 @@ void distributed_matrix_vector_mult(const int n, double* local_A, double* local_
 {
 	// TODO
 
-	//std::cout<<"DEBUG:mpi_jacobi::distributed_matrix_vector_mult:begin"<<std::endl;
+
 
 	// rank in grid
 	int cur_rank;
@@ -668,7 +659,7 @@ void distributed_matrix_vector_mult(const int n, double* local_A, double* local_
 	int row_coords_root = 0;
 	MPI_Cart_rank(comm_row,&row_coords_root,&rank_row_root);
 
-	//std::cout<<"DEBUG:mpi_jacobi::distributed_matrix_vector_mult:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),rowrank="<<cur_row_rank<<",row_size="<<row_size<<",colrank="<<cur_col_rank<<",col_size="<<col_size<<std::endl;
+
 
 	// get the row block size
 	int fnp = (int)floor(((double)n)/row_size);
@@ -680,7 +671,7 @@ void distributed_matrix_vector_mult(const int n, double* local_A, double* local_
 	cnp = (int)ceil(((double)n)/col_size);
 	int col_block_size = cur_col_rank < ( n % col_size ) ? cnp : fnp;
 
-	//std::cout<<"DEBUG:mpi_jacobi::distributed_matrix_vector_mult:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),allocating memory for x row_vector="<<row_block_size<<std::endl;
+
 
 	double *row_vector=(double *)malloc(row_block_size*sizeof(double));
 
@@ -692,11 +683,11 @@ void distributed_matrix_vector_mult(const int n, double* local_A, double* local_
 		for (int j=0;j<row_block_size;j++){
 			local_y[i] = local_y[i] + local_A[col_block_size*j+i]*row_vector[j];  
 		}
-		//std::cout<<"DEBUG:mpi_jacobi::distributed_matrix_vector_mult:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),at local processor local_y["<<i<<"]="<<local_y[i]<<std::endl;
+
 	}
 
 	//sum up the results to the first column
-	//std::cout<<"DEBUG:mpi_jacobi::distributed_matrix_vector_mult:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),completed local matrix multiplication, now reducing results to first column"<<std::endl;
+
 
 	//reduce the matrix mult results to first column
 	MPI_Barrier(comm);
@@ -711,7 +702,7 @@ void distributed_matrix_vector_mult(const int n, double* local_A, double* local_
 	// print the results in the first col
 	//if (cur_coords[1] == 0 ) {
 	//for ( int i=0;i < col_block_size;i++) {
-	//std::cout<<"DEBUG:mpi_jacobi::distributed_matrix_vector_mult:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),reduced y local_y["<<i<<"]="<<local_y[i]<<std::endl;
+
 	//}
 	//}
 
@@ -724,7 +715,7 @@ void distributed_jacobi(const int n, double* local_A, double* local_b, double* l
 {
 
 	// TODO
-	//std::cout<<"DEBUG:mpi_jacobi::distributed_jacobi:begin"<<std::endl;
+
 
 
 	// rank in grid
@@ -742,7 +733,7 @@ void distributed_jacobi(const int n, double* local_A, double* local_b, double* l
 	int ldims[2] = {1,0};
 	MPI_Cart_sub(comm,ldims,&comm_col);
 
-	//std::cout<<"DEBUG:mpi_jacobi::distributed_jacobi:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),created row cart sub for rank="<<cur_rank<<std::endl;
+
 
 	// rank in the row and col
 	int row_size;
@@ -766,7 +757,7 @@ void distributed_jacobi(const int n, double* local_A, double* local_b, double* l
 	int rank_row_diag;
 	MPI_Cart_rank(comm_row,&row_diag_proc_coords,&rank_row_diag);
 
-	//std::cout<<"DEBUG:mpi_jacobi::distributed_jacobi:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),rowrank="<<cur_row_rank<<",row_size="<<row_size<<",colrank="<<cur_col_rank<<",col_size="<<col_size<<std::endl;
+
 
 	// get the row block size
 	int row_block_size;
@@ -792,13 +783,13 @@ void distributed_jacobi(const int n, double* local_A, double* local_b, double* l
 			if ( (cur_coords[0] == cur_coords[1]) && ( i==j )){
 				local_D[i]=local_A[j*col_block_size+i];
 				//local_R[j*col_block_size+i] = 0.0;
-				//std::cout<<"DEBUG:mpi_jacobi::distributed_jacobi:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),local_D["<<i<<"]="<<local_D[i]<<std::endl;
+
 			}
 			//else
 			//	local_R[j*col_block_size+i]=local_A[j*col_block_size+i];
 
 			//if (( cur_coords[1]==1) && (cur_coords[0] == 0 )) {
-			//std::cout<<"DEBUG:mpi_jacobi::distributed_jacobi:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),local_R["<<i<<","<<j<<"]="<<local_R[j*col_block_size+i]<<std::endl;
+
 			//}
 		}
 	}
@@ -808,12 +799,12 @@ void distributed_jacobi(const int n, double* local_A, double* local_b, double* l
 	//rcv in i,i processors from 0 processor in same row
 	if ((cur_coords[0] == cur_coords[1]) && (cur_coords[1] != 0 ) ) {
 		MPI_Send(local_D,col_block_size, MPI_DOUBLE,rank_row_root,0,comm_row);
-		//std::cout<<"DEBUG:mpi_jacobi::distributed_jacobi:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),sending local_D from rank_row_diag="<<rank_row_diag<<", to rank_row_root"<<rank_row_root<<std::endl;
+
 	}
 
 	if ( (cur_coords[1] == 0 ) && (cur_coords[0] != 0) ) {
 		MPI_Recv(local_D,col_block_size,MPI_DOUBLE,rank_row_diag,0,comm_row,MPI_STATUS_IGNORE);
-		//std::cout<<"DEBUG:mpi_jacobi::distributed_jacobi:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),recieving local_D from rank_row_diag="<<rank_row_diag<<std::endl;
+
 	}
 
 
@@ -835,15 +826,15 @@ void distributed_jacobi(const int n, double* local_A, double* local_b, double* l
 	while ( (iter < max_iter) && ( l2norm > l2_termination ) )
 	{
 
-		//std::cout<<"DEBUG:jacobi.cpp::distributed_jacobi:::(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),starting Iteration="<<iter<<std::endl;
 
 
-		//std::cout<<"DEBUG:jacobi.cpp::distributed_jacobi:::(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),in Iteration="<<iter<<",crossed barrier"<<std::endl;
+
+
 
 		// y = Ax
 		///distributed_matrix_vector_mult(n,local_A,local_x,local_y,comm);
 
-		//std::cout<<"DEBUG:jacobi.cpp::distributed_jacobi:::(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),in Iteration="<<iter<<",completed Rx"<<std::endl;
+
 
 		// first col operation
 		//  get the new local_x
@@ -856,17 +847,17 @@ void distributed_jacobi(const int n, double* local_A, double* local_b, double* l
 
 		//if ( cur_coords[1] == 0 ){
 		//for (int i = 0;i<col_block_size;i++){
-		//std::cout<<"DEBUG:mpi_jacobi::distributed_jacobi:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),multiplied y=rx, local_y["<<i<<"]="<<local_y[i]<<std::endl;
+
 		//}
 		//}
 
 		// Ax
 		distributed_matrix_vector_mult(n,local_A,local_x,local_y,comm);
-		//std::cout<<"DEBUG:jacobi.cpp::distributed_jacobi:::(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),in Iteration="<<iter<<",completed Ax"<<std::endl;
+
 
 		//if ( cur_coords[1] == 0 ){
 		//for (int i = 0;i<col_block_size;i++){
-		//std::cout<<"DEBUG:mpi_jacobi::distributed_jacobi:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),multiplied y=ax local_y["<<i<<"]="<<local_y[i]<<std::endl;
+
 		//}
 		//}
 
@@ -878,7 +869,7 @@ void distributed_jacobi(const int n, double* local_A, double* local_b, double* l
 				tl2norm = tl2norm + pow(local_b[i]-local_y[i],2);
 			}
 
-			//std::cout<<"DEBUG:jacobi.cpp::distributed_jacobi:::(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),Iteration="<<iter<<", MPI_ALL_reduce sending tl2norm="<<tl2norm<<std::endl;
+
 
 		}
 
@@ -888,7 +879,7 @@ void distributed_jacobi(const int n, double* local_A, double* local_b, double* l
 
 		l2norm = sqrt(l2norm);
 
-		//std::cout<<"DEBUG:jacobi.cpp::distributed_jacobi:::(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),completed Iteration="<<iter<<", with l2norm="<<l2norm<<std::endl;
+
 
 		iter++;
 
@@ -944,7 +935,7 @@ void mpi_jacobi(const int n, double* A, double* b, double* x, MPI_Comm comm,
 	MPI_Cart_coords(comm, cur_rank, 2, cur_coords);
 
 	//if (( cur_coords[1] == 0 ) && (cur_coords[0] == 0)){
-	//  std::cout<<"DEBUG:mpi_jacobi::distributed_jacobi:(i,j)=("<<cur_coords[0]<<","<<cur_coords[1]<<"),Results x = [";
+
 	//  for (int i = 0;i<n;i++){
 	//   std::cout<<x[i]<<" ,";
 	//}
