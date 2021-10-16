@@ -1005,36 +1005,40 @@ int main(int argc, char** argv){
 
 	const int grid_size = 4;	// generate 4 x 4 grid
 
-	double* A = new double[grid_size*grid_size*grid_size*grid_size];
-	gen_matrix(grid_size, A);
+//	double* A = new double[grid_size*grid_size*grid_size*grid_size];
+//	gen_matrix(grid_size, A);
+	
+
+	// mpicxx -o jacobi_mpi jacobi_mpi.cpp
+	// mpirun -np 4 --oversubscribe jacobi_mpi in single core computer
+    int n = 4;
+
+    double A[4*4] = {
+                         10., -1., 2., 0.,
+                         -1., 11., -1., 3.,
+                         2., -1., 10., -1.,
+                         0.0, 3., -1., 8.
+                     };
+
+    double x[4] =  {6., 25., -11., 15.};
+    double y[4];
+    double expected_y[4] = {13.,  325., -138.,  206.};
 
 
 
-    // MPI_Init(&argc, &argv);
-    // int n = 4;
+	MPI_Init(&argc, &argv);
 
-    // double A[4*4] = {
-    //                     10., -1., 2., 0.,
-    //                     -1., 11., -1., 3.,
-    //                     2., -1., 10., -1.,
-    //                     0.0, 3., -1., 8.
-    //                 };
+    MPI_Comm grid_comm;
+    get_grid_comm(&grid_comm);
 
-    // double x[4] =  {6., 25., -11., 15.};
-    // double y[4];
-    // double expected_y[4] = {13.,  325., -138.,  206.};
+    mpi_matrix_vector_mult(n, A, x, y, grid_comm);
 
-    // MPI_Comm grid_comm;
-    // get_grid_comm(&grid_comm);
+    MPI_Finalize();
+    for(int i = 0 ; i < n; ++i){
+        printf("%.2f ", y[i]);
+    }
+    printf("\n");
 
-    // mpi_matrix_vector_mult(n, A, x, y, grid_comm);
-
-    // for(int i = 0 ; i < n; ++i){
-    //     printf("%.2f ", y[i]);
-    // }
-    // printf("\n");
-
-    // MPI_Finalize();
 
     return 0;
 }
