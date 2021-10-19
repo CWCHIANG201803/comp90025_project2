@@ -5,11 +5,7 @@
 #include <cstring>
 #include <sys/time.h>
 
-uint64_t GetTimeStamp() {
-    struct timeval tv;
-    gettimeofday(&tv,NULL);
-    return tv.tv_sec*(uint64_t)1000000+tv.tv_usec;
-}
+
 
 // The following code comes from https://github.com/ajdsouza/Parallel-MPI-Jacobi.git
 // use MPI to solve the linear equation Ax = b
@@ -1066,15 +1062,18 @@ int main(int argc, char** argv)
 	gen_b(grid_size, b);
 
 	double* x = new double[n_rows];
-	
+	double start = 0, end = 0;
 
-	uint64_t start = GetTimeStamp();
 	MPI_Init(&argc, &argv);
     MPI_Comm grid_comm;
+	MPI_Barrier(MPI_COMM_WORLD);
+	
+	start = MPI_Wtime();
     get_grid_comm(&grid_comm);
 	mpi_jacobi(grid_size, A, b, x, grid_comm);
+	end = MPI_Wtime();
+	printf("time = %.2f sec", end-start);
     MPI_Finalize();
-	printf("Time: %ld us\n", (uint64_t) (GetTimeStamp() - start));
 
     // show_vec(x, grid_size);
     // printf("\n");
