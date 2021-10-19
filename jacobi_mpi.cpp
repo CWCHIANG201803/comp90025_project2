@@ -1066,13 +1066,19 @@ int main(int argc, char** argv)
 
 	MPI_Init(&argc, &argv);
     MPI_Comm grid_comm;
-	MPI_Barrier(MPI_COMM_WORLD);
 	
 	start = MPI_Wtime();
     get_grid_comm(&grid_comm);
+	for(int i = 0 ; i<100; ++i)
+		MPI_Barrier(grid_comm);
+
 	mpi_jacobi(grid_size, A, b, x, grid_comm);
+
+	for(int i = 0 ; i<100; ++i)
+		MPI_Barrier(grid_comm);
 	end = MPI_Wtime();
 	printf("time = %.4f sec\n", end-start);
+	
     MPI_Finalize();
 
     // show_vec(x, grid_size);
