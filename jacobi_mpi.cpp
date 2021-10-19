@@ -1072,7 +1072,7 @@ int main(int argc, char** argv)
     get_grid_comm(&grid_comm);
 	mpi_jacobi(grid_size, A, b, x, grid_comm);
 	end = MPI_Wtime();
-	printf("time = %.2f sec", end-start);
+	printf("time = %.4f sec\n", end-start);
     MPI_Finalize();
 
     // show_vec(x, grid_size);
